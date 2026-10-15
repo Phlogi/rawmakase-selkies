@@ -1,0 +1,35 @@
+# The browser-streamed RAWmakase, CPU only: no /dev/dri is mounted, so Mesa's
+# software rasterizers draw the window and the app renders previews on the CPU.
+#
+# Podman: PUID/PGID and the named volume both work; run with
+# `podman-compose up -d` or `podman kube play`.
+services:
+  rawmakase:
+    build:
+      context: .
+      args:
+        RAWMAKASE_VERSION: "0.3.2"
+    image: rawmakase-selkies:0.3.2
+    container_name: rawmakase
+    # Browsers and Electron apps in the base image expect more than the 64 MB
+    # default; the app itself needs it for the image surfaces it streams.
+    shm_size: 1gb
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      # The base image otherwise probes for a GPU that is never mounted.
+      - AUTO_GPU=false
+      # Set by a kiosk deployment that should not sit on the first-run
+      # usage-report question; see the README.
+      # - RAWMAKASE_NO_TELEMETRY=1
+    ports:
+      # HTTPS with a self-signed certificate: the stream needs a secure context.
+      - 3001:3001
+    volumes:
+      # Home directory of the session user: catalog, session, presets, cache.
+      - ./config:/config
+      # Photos. Read-only is enough to open and develop; export writes to
+      # /config or another writable mount.
+      - ./photos:/photos:ro
+    restart: unless-stopped

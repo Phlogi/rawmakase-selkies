@@ -1,0 +1,7 @@
+# Created by running compose.yaml here: the session home and an example photo
+# mount point.
+config/
+photos/
+
+# macOS
+.DS_Store
