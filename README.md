@@ -279,12 +279,25 @@ Confirmed:
 - dpkg owns both `/usr/bin/rawmakase` and `/usr/lib/rawmakase/rawmakase`, so the
   install is package-managed and never self-updates.
 
+### In CI
+
+[Run 38800310577](https://github.com/Phlogi/rawmakase-selkies/actions/runs/38800310577)
+built both platforms from the container's first commit and published them:
+`linux/amd64` in 2m37s, `linux/arm64` under emulation in 4m51s, and the
+manifest lists for `latest` and `0.3.2` seconds later, pointing at the per
+architecture images. The container package is under
+[Phlogi's packages](https://github.com/Phlogi?tab=packages) and is private like
+the repository. A dispatched run of the update workflow found the pin already
+at `0.3.2`, so it changed nothing, which is what it should do when it is
+already current.
+
 Not verified, and worth doing before relying on this: a real browser session
 across a network (stream latency, FullColor, clipboard, file dialogs), CPU
 preview timings on large RAW files, importing a profile and reopening a catalog
-after a rebuild, and the Wayland stack. The virtual screen starts at 1024×768
-until a client connects and asks for more, so the window opens clamped to that
-and wants maximizing afterwards.
+after a rebuild, pulling the published image as a user who is not its owner, and
+the Wayland stack. The virtual screen starts at 1024×768 until a client connects
+and asks for more, so the window opens clamped to that and wants maximizing
+afterwards.
 
 ## License
 

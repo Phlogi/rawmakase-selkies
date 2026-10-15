@@ -9,6 +9,11 @@ name: Publish
 on:
   push:
     branches: [main]
+    # Documentation and the Dependabot configuration do not change the image,
+    # so they do not republish it.
+    paths-ignore:
+      - "**.md"
+      - ".github/dependabot.yml"
   pull_request:
   workflow_dispatch:
     inputs:
