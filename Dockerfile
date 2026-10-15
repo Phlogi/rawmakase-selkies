@@ -13,8 +13,10 @@
 ARG BASE_IMAGE=ghcr.io/linuxserver/baseimage-selkies:debiantrixie
 FROM ${BASE_IMAGE}
 
-# The release to install. RAWMAKASE_DEB overrides the whole URL, for a local
-# mirror, a nightly or a hand-built package.
+# The release to install. This line is the only place the app version is
+# written down: the update workflow moves it, the publish workflow tags the
+# image with it, and nothing else repeats it. RAWMAKASE_DEB overrides the whole
+# URL, for a local mirror, a nightly or a hand-built package.
 ARG RAWMAKASE_VERSION=0.3.2
 ARG RAWMAKASE_DEB=
 

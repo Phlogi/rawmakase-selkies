@@ -1,15 +1,16 @@
 # The browser-streamed RAWmakase, CPU only: no /dev/dri is mounted, so Mesa's
 # software rasterizers draw the window and the app renders previews on the CPU.
 #
-# Podman: PUID/PGID and the named volume both work; run with
-# `podman-compose up -d` or `podman kube play`.
+# The app version is not repeated here: the Dockerfile pins it, and
+# `docker compose up -d --build` follows whatever it says.
+#
+# Podman works the same way. `docker compose pull` uses the published image
+# instead of building; log in to ghcr.io first while the repository is private.
 services:
   rawmakase:
     build:
       context: .
-      args:
-        RAWMAKASE_VERSION: "0.3.2"
-    image: rawmakase-selkies:0.3.2
+    image: ghcr.io/phlogi/rawmakase-selkies:latest
     container_name: rawmakase
     # Browsers and Electron apps in the base image expect more than the 64 MB
     # default; the app itself needs it for the image surfaces it streams.
@@ -29,6 +30,8 @@ services:
     volumes:
       # Home directory of the session user: catalog, session, presets, cache.
       - ./config:/config
+      # A library of your own, at the path its catalog records; see the README.
+      # - /Users/you/EditFotos:/Users/you/EditFotos:ro
       # Photos. Read-only is enough to open and develop; export writes to
       # /config or another writable mount.
       - ./photos:/photos:ro

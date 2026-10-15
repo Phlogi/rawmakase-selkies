@@ -1,0 +1,65 @@
+name: Update to the latest release
+
+# RAWmakase ships new Linux packages often, and this image only has to pin a
+# version to pick one up. Once a day this looks for a newer release, checks the
+# .deb files the image would install are really published, moves the pin, and
+# asks the publish workflow to build and push the result. Nothing else in the
+# repository mentions a version, so nothing else has to change.
+
+on:
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  # Dispatching the publish workflow below is the one event a GITHUB_TOKEN
+  # commit cannot cause on its own.
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compare the pinned version with the latest release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          latest=$(gh api repos/pch/rawmakase/releases/latest --jq .tag_name)
+          latest=${latest#v}
+          pinned=$(grep -oP '^ARG RAWMAKASE_VERSION=\K\S+' Dockerfile)
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "pinned=$pinned" >> "$GITHUB_OUTPUT"
+          if [ "$latest" = "$pinned" ]; then
+            echo "Already at $pinned." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # The image installs exactly these two files, so a release that does
+          # not have them is not one this image can be pointed at.
+          assets=$(gh api repos/pch/rawmakase/releases/latest --jq '.assets[].name')
+          for arch in amd64 arm64; do
+            grep -qx "rawmakase_${latest}_${arch}.deb" <<<"$assets" \
+              || { echo "No rawmakase_${latest}_${arch}.deb in v${latest}" >&2; exit 1; }
+          done
+          echo "$latest is newer than $pinned." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Move the pin
+        if: steps.release.outputs.latest != steps.release.outputs.pinned
+        run: |
+          sed -i "s/^ARG RAWMAKASE_VERSION=.*/ARG RAWMAKASE_VERSION=${{ steps.release.outputs.latest }}/" Dockerfile
+          git diff --color=never Dockerfile
+
+      - name: Commit and publish
+        if: steps.release.outputs.latest != steps.release.outputs.pinned
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Update to RAWmakase ${{ steps.release.outputs.latest }}" Dockerfile
+          git push
+          gh workflow run publish.yaml -f publish=true

@@ -42,23 +42,64 @@ and previews use the GPU instead; the base image also gets zero-copy encoding.
 
 ## Quick start
 
+The published image is built for amd64 and arm64 from the same Dockerfile:
+
+```bash
+podman run -d --name rawmakase --shm-size=1gb -p 3001:3001 \
+  -v ./config:/config -v /path/to/photos:/photos:ro \
+  ghcr.io/phlogi/rawmakase-selkies:latest
+```
+
+To build it yourself instead:
+
 ```bash
 git clone https://github.com/Phlogi/rawmakase-selkies.git
 cd rawmakase-selkies
-podman build -t rawmakase-selkies:0.3.2 .
-podman run -d --name rawmakase --shm-size=1gb -p 3001:3001 \
-  -v ./config:/config -v /path/to/photos:/photos:ro \
-  rawmakase-selkies:0.3.2
+docker compose up -d --build
 ```
 
-Then open <https://localhost:3001> and accept the self-signed certificate. The
-web client opens on a Play overlay over a black canvas: the stream starts on the
-first click, not on page load. Give the session at least 1280×720 in the web
+Either way, open <https://localhost:3001> and accept the self-signed certificate.
+The web client opens on a Play overlay over a black canvas: the stream starts on
+the first click, not on page load. Give the session at least 1280×720 in the web
 client's sidebar, since the app's window does not go below 900×650.
 
-`compose.yaml` is the same thing for `podman-compose`/`docker compose`. Port 3000
-is plain HTTP and only for a reverse proxy that terminates TLS; the stream needs
-a secure context, so browse 3001 directly.
+Port 3000 is plain HTTP and only for a reverse proxy that terminates TLS; the
+stream needs a secure context, so browse 3001 directly.
+
+## Published images
+
+[`publish.yaml`](.github/workflows/publish.yaml) builds both architectures and
+pushes them to `ghcr.io/phlogi/rawmakase-selkies` whenever `main` changes, and
+on a manual run with publishing switched on. Pull requests build the same two
+images without publishing them.
+
+| Tag | Meaning |
+| --- | --- |
+| `latest`, `<version>` | Manifest lists covering `linux/amd64` and `linux/arm64`; `<version>` is the RAWmakase release the image installs. |
+| `latest-amd64`, `<version>-amd64`, and the same for `arm64` | The single-architecture images those manifests point at, for pinning one. |
+
+The repository and its package are private for now, so pulling needs a login:
+`docker login ghcr.io` with a token that has `read:packages`. Making the
+repository public and making the container package public are two separate
+steps, and the package is not published by making the repository public.
+
+### Keeping up with RAWmakase releases
+
+RAWmakase publishes new Linux packages often, and this image only has to pin a
+version to pick one up. Once a day,
+[`update-app.yml`](.github/workflows/update-app.yml) asks GitHub for the latest
+release (prereleases and drafts are ignored), checks that the two `.deb` files
+the image installs are really attached to it, moves the pin in the Dockerfile,
+commits and then dispatches the publish run. A release without those packages
+fails the run instead of building an image around a version it cannot install.
+
+The Dockerfile is the only place the version is written down, so there is
+nothing else for the bot, or for a person, to keep in step. A commit made with
+the workflow's own token does not trigger other workflows, which is why the
+update dispatches the publish run rather than relying on its push.
+
+Dependabot watches the actions and the baseimage tag, but not the app version:
+that comes from releases, not from a tag on an image.
 
 ## Photos
 
@@ -70,7 +111,7 @@ preview, and it is the right default for a folder you care about:
 podman run -d --name rawmakase --shm-size=1gb -p 3001:3001 \
   -v ./config:/config \
   -v /Users/you/EditFotos:/photos:ro \
-  rawmakase-selkies:0.3.2
+  ghcr.io/phlogi/rawmakase-selkies:latest
 ```
 
 In the session, choose **Add Photo Folder…** and press Ctrl+L to type `/photos`.
@@ -96,7 +137,7 @@ podman run -d --name rawmakase --shm-size=1gb -p 3001:3001 \
   -v ./config:/config \
   -v /Users/you/rawmakase-catalogs:/catalogs \
   -v /Users/you/EditFotos:/Users/you/EditFotos:ro \
-  rawmakase-selkies:0.3.2
+  ghcr.io/phlogi/rawmakase-selkies:latest
 ```
 
 Open `/catalogs/Photos.rawmakase` with **Open catalog**: it is the copy, so the
@@ -138,15 +179,20 @@ these locations is in its
 | `root/defaults/autostart` | The same for the Openbox/X11 stack (`PIXELFLUX_WAYLAND=false`). |
 | `root/defaults/menu*.xml` | Right-click menu with a terminal and RAWmakase, so a closed app can be brought back. |
 | `compose.yaml` | Ports, volumes, `shm_size` and the CPU-only environment. |
+| `.github/workflows/publish.yaml` | Builds amd64 and arm64 and pushes them to ghcr.io, merging the two into manifest lists. |
+| `.github/workflows/update-app.yml` | Moves the pinned RAWmakase version to the latest release and republishes. |
+| `.github/dependabot.yml` | Keeps the actions and the baseimage tag current. |
 
 Build arguments:
 
-- `RAWMAKASE_VERSION` (default `0.3.2`) — the release to install.
+- `RAWMAKASE_VERSION` — the RAWmakase release to install, pinned in the
+  Dockerfile and moved by the update workflow. Override it for a one-off build.
 - `RAWMAKASE_DEB` — a full URL to a different package, for a local mirror, a
   nightly or a hand-built `.deb`.
-- `BASE_IMAGE` — override the baseimage tag, e.g.
-  `ghcr.io/linuxserver/baseimage-selkies:arm64v8-debiantrixie` on an ARM host,
-  since the plain tag resolves to amd64 only.
+- `BASE_IMAGE` — the baseimage, which LinuxServer tags per architecture:
+  `debiantrixie` is amd64 and arm64 needs
+  `arm64v8-debiantrixie`. CI passes the right one per platform; a local ARM
+  build has to do the same.
 
 Installing the package, rather than a copy of the binary in a portable folder,
 is deliberate: dpkg owns `/usr/bin/rawmakase`, so the app's updater recognizes a

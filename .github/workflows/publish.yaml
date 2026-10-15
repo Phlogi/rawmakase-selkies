@@ -1,0 +1,95 @@
+name: Publish
+
+# Builds the image for both architectures and, on `main`, publishes it to
+# ghcr.io as `latest`, as the version pinned in the Dockerfile, and as
+# per-architecture tags. Pull requests build the same thing without publishing,
+# so a broken Dockerfile or an unavailable release package is caught before it
+# reaches the registry; a manual run can do either.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Push the built images to ghcr.io
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/phlogi/rawmakase-selkies
+  BASE: ghcr.io/linuxserver/baseimage-selkies
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      app: ${{ steps.pinned.outputs.app }}
+    steps:
+      - uses: actions/checkout@v4
+      # The Dockerfile is the only place the app version is written down; see
+      # the update workflow, which edits that line.
+      - id: pinned
+        run: echo "app=$(grep -oP '^ARG RAWMAKASE_VERSION=\K\S+' Dockerfile)" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        # LinuxServer publish architecture-suffixed tags: the plain one is
+        # amd64 only, hence the explicit base tag per platform.
+        include:
+          - platform: linux/amd64
+            base: debiantrixie
+            arch: amd64
+          - platform: linux/arm64
+            base: arm64v8-debiantrixie
+            arch: arm64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - if: github.event_name == 'push' || inputs.publish == true
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          push: ${{ github.event_name == 'push' || inputs.publish == true }}
+          build-args: BASE_IMAGE=${{ env.BASE }}:${{ matrix.base }}
+          tags: |
+            ${{ env.IMAGE }}:${{ needs.version.outputs.app }}-${{ matrix.arch }}
+            ${{ env.IMAGE }}:latest-${{ matrix.arch }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  manifest:
+    needs: [version, build]
+    if: github.event_name == 'push' || inputs.publish == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v3
+      # The per-architecture images stay published; these two tags are the
+      # manifest lists that `docker pull` picks from automatically.
+      - run: |
+          docker buildx imagetools create \
+            -t "$IMAGE:${{ needs.version.outputs.app }}" \
+            -t "$IMAGE:latest" \
+            "$IMAGE:${{ needs.version.outputs.app }}-amd64" \
+            "$IMAGE:${{ needs.version.outputs.app }}-arm64"
