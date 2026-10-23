@@ -5,4 +5,5 @@
 #
 # RAWMAKASE_CLI carries user arguments (a folder to open, for example) without
 # rebuilding the image, the way LinuxServer's browser images pass theirs.
-exec /usr/bin/rawmakase ${RAWMAKASE_CLI}
+xset s off -dpms 2>/dev/null || true
+/usr/bin/rawmakase ${RAWMAKASE_CLI}
