@@ -26,6 +26,12 @@ permissions:
   contents: read
   packages: write
 
+# Queue pushes to the same ref instead of cancelling them, so a half-finished
+# multi-architecture publish never leaves `latest` pointing at stale images.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 env:
   IMAGE: ghcr.io/phlogi/rawmakase-selkies
   BASE: ghcr.io/linuxserver/baseimage-selkies

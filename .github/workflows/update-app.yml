@@ -17,6 +17,10 @@ permissions:
   # commit cannot cause on its own.
   actions: write
 
+concurrency:
+  group: update-app
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-26.04

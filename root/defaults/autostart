@@ -3,7 +3,8 @@
 # /config/.config/openbox/autostart on first run only, so edits made in a
 # running session stick.
 #
-# RAWMAKASE_CLI carries user arguments (a folder to open, for example) without
-# rebuilding the image, the way LinuxServer's browser images pass theirs.
+# RAWMAKASE_CLI carries user arguments (a catalog or photo to open, for
+# example) without rebuilding the image, the way LinuxServer's browser images
+# pass theirs.
 xset s off -dpms 2>/dev/null || true
-/usr/bin/rawmakase ${RAWMAKASE_CLI}
+exec /usr/bin/rawmakase ${RAWMAKASE_CLI}

@@ -21,6 +21,8 @@ services:
       - TZ=Etc/UTC
       # The base image otherwise probes for a GPU that is never mounted.
       - AUTO_GPU=false
+      # Optional startup argument: a catalog or a single photo, not a folder.
+      # - RAWMAKASE_CLI=/photos/CYH_5249.NEF
       # Set by a kiosk deployment that should not sit on the first-run
       # usage-report question; see the README.
       # - RAWMAKASE_NO_TELEMETRY=1
@@ -30,9 +32,14 @@ services:
     volumes:
       # Home directory of the session user: catalog, session, presets, cache.
       - ./config:/config
-      # A library of your own, at the path its catalog records; see the README.
-      # - /Users/you/EditFotos:/Users/you/EditFotos:ro
-      # Photos. Read-only is enough to open and develop; export writes to
-      # /config or another writable mount.
+      # Your photos. Read-only is enough to open and develop; export writes to
+      # /config or another writable mount. Point the left side at your folder.
       - ./photos:/photos:ro
+      # An existing library: mount the photo folder at the same absolute path
+      # its catalog records, and give the catalog a writable mount. Uncomment
+      # and adjust; see "Photos and catalogs" in the README.
+      # - /path/on/host/EditFotos:/path/on/host/EditFotos:ro
+      # - ./catalogs:/catalogs
+      # Optional writable destination for exports.
+      # - ./exports:/exports
     restart: unless-stopped

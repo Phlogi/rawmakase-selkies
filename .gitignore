@@ -1,7 +1,9 @@
-# Created by running compose.yaml here: the session home and an example photo
-# mount point.
+# Created by running compose.yaml here: the session home, example mounts and
+# the optional catalog/export folders from its commented volume examples.
 config/
 photos/
+catalogs/
+exports/
 
 # macOS
 .DS_Store
