@@ -5,7 +5,7 @@
 # `docker compose up -d --build` follows whatever it says.
 #
 # Podman works the same way. `docker compose pull` uses the published image
-# instead of building; log in to ghcr.io first while the repository is private.
+# instead of building; the image is public on ghcr.io.
 services:
   rawmakase:
     build:

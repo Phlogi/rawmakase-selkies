@@ -78,7 +78,9 @@ images without publishing them.
 | `latest`, `<version>` | Manifest lists covering `linux/amd64` and `linux/arm64`; `<version>` is the RAWmakase release the image installs. |
 | `latest-amd64`, `<version>-amd64`, and the same for `arm64` | The single-architecture images those manifests point at, for pinning one. |
 
-The repository and its package are private for now, so pulling needs a login:
+The repository and its container package are public, so the image can be pulled
+anonymously with `docker pull ghcr.io/phlogi/rawmakase-selkies:latest`. If you
+fork this and keep either one private, pulling needs a login:
 `docker login ghcr.io` with a token that has `read:packages`. Making the
 repository public and making the container package public are two separate
 steps, and the package is not published by making the repository public.
@@ -286,7 +288,7 @@ built both platforms from the container's first commit and published them:
 `linux/amd64` in 2m37s, `linux/arm64` under emulation in 4m51s, and the
 manifest lists for `latest` and `0.3.2` seconds later, pointing at the per
 architecture images. The container package is under
-[Phlogi's packages](https://github.com/Phlogi?tab=packages) and is private like
+[Phlogi's packages](https://github.com/Phlogi?tab=packages) and is public, like
 the repository. A dispatched run of the update workflow found the pin already
 at `0.3.2`, so it changed nothing, which is what it should do when it is
 already current.
