@@ -1,8 +1,6 @@
-name: Dependency updates
-
-# Actions, and the LinuxServer baseimage tag, move on their own. The app's own
-# version is handled by the update workflow instead, which reads releases rather
-# than tags on an image.
+# Dependency updates: actions and the LinuxServer baseimage tag move on their
+# own. The app's own version is handled by the update workflow instead, which
+# reads releases rather than tags on an image.
 
 version: 2
 updates:
