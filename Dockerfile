@@ -17,7 +17,7 @@ FROM ${BASE_IMAGE}
 # written down: the update workflow moves it, the publish workflow tags the
 # image with it, and nothing else repeats it. RAWMAKASE_DEB overrides the whole
 # URL, for a local mirror, a nightly or a hand-built package.
-ARG RAWMAKASE_VERSION=0.4.6
+ARG RAWMAKASE_VERSION=0.4.8
 ARG RAWMAKASE_DEB=
 
 ARG DEBIAN_FRONTEND=noninteractive
