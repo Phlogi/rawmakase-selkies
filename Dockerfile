@@ -1,4 +1,4 @@
-# A browser-streamed RAWmakase, on LinuxServer's Selkies baseimage
+# A browser-streamed RAWmakase, on LinuxServer's Selkies base image
 # (https://github.com/linuxserver/docker-baseimage-selkies). Selkies runs a
 # window manager and the desktop build of the app on a virtual display, and
 # streams that to a browser, so this image needs no port of the app.
