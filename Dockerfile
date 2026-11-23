@@ -28,9 +28,10 @@ ENV TITLE="RAWmakase" \
 
 # Upgrade the base image's packages first, so Debian security fixes published
 # after LinuxServer built it are included even when the base digest is unchanged.
-# The base image's optional Docker-in-Docker stack is then removed: this image is
-# unprivileged and never sets START_DOCKER, so the daemon and its plugins would
-# only add vulnerable, unused binaries.
+# Then drop the desktop pieces this CPU-only image never uses: Docker-in-Docker
+# (unprivileged, never sets START_DOCKER), GPU/VA-API firmware and drivers
+# (AUTO_GPU=false), printing (SELKIES_PRINTING_ENABLED=false), the Breeze cursor
+# theme, and the all-locales bundle (only en_US.UTF-8 is regenerated).
 RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in amd64|arm64) ;; *) echo "No RAWmakase package for $arch" >&2; exit 1 ;; esac; \
@@ -39,7 +40,14 @@ RUN set -eux; \
     apt-get upgrade -y; \
     apt-get purge -y \
         docker-ce docker-ce-cli docker-compose-plugin docker-buildx-plugin \
-        containerd.io; \
+        containerd.io \
+        firmware-amd-graphics firmware-linux-nonfree firmware-misc-nonfree \
+        i965-va-driver-shaders intel-media-va-driver-non-free mesa-va-drivers \
+        libnvidia-egl-gbm1 libnvidia-egl-wayland1 \
+        cups-client cups-common cups-daemon cups-filters \
+        cups-filters-core-drivers cups-ipp-utils \
+        breeze-cursor-theme locales-all; \
+    localedef -i en_US -f UTF-8 en_US.UTF-8; \
     apt-get install -y --no-install-recommends ca-certificates curl; \
     curl -fsSL -o /tmp/rawmakase.deb "$url"; \
     apt-get install -y --no-install-recommends \
