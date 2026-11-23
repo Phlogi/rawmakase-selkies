@@ -10,8 +10,9 @@
 # No GPU is required. Mesa's software Vulkan (lavapipe) gives wgpu an adapter
 # that can draw the window; preview rendering sees a software adapter and falls
 # back to the CPU renderer, which is the same path export uses.
-ARG BASE_IMAGE=ghcr.io/linuxserver/baseimage-selkies:debiantrixie
-FROM ${BASE_IMAGE}
+# Pinned to the multi-arch index digest: Dependabot advances it when
+# LinuxServer publishes a new build, and the tag stays for readability.
+FROM ghcr.io/linuxserver/baseimage-selkies:debiantrixie@sha256:793fc3628ad6e089aecfd9f862de3ad5d9df05f1db783363c812f77d6541ccc3
 
 # The release to install. This line is the only place the app version is
 # written down: the update workflow moves it, the publish workflow tags the

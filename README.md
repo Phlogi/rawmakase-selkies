@@ -117,9 +117,10 @@ Build arguments:
   the image with it.
 - `RAWMAKASE_DEB` — a full URL to a different package, such as a local mirror,
   a nightly or a hand-built `.deb`.
-- `BASE_IMAGE` — the Selkies base image. LinuxServer tags it per architecture,
-  so `debiantrixie` is amd64 and arm64 needs `arm64v8-debiantrixie`. CI passes
-  the right one per platform; a local ARM build must do the same.
+
+The Selkies base image is pinned by digest in the `Dockerfile` as the
+multi-arch `debiantrixie` index, so `docker buildx` resolves the right platform
+and Dependabot can open a pull request when LinuxServer publishes a new build.
 
 The package, rather than a copied binary, is installed deliberately: dpkg owns
 `/usr/bin/rawmakase`, so the app never tries to self-update inside the

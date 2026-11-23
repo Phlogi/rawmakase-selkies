@@ -1,5 +1,6 @@
-# Dependency updates: actions and the LinuxServer baseimage tag move on their
-# own. The app's own version is handled by the update workflow instead, which
+# Dependency updates: actions and the digest-pinned LinuxServer base image.
+# Dependabot cannot see OS packages inside the base image, so it advances the
+# base digest; RAWmakase's own version is handled by the update workflow, which
 # reads releases rather than tags on an image.
 
 version: 2
