@@ -38,7 +38,7 @@ RUN set -eux; \
     url="${RAWMAKASE_DEB:-https://github.com/pch/rawmakase/releases/download/v${RAWMAKASE_VERSION}/rawmakase_${RAWMAKASE_VERSION}_${arch}.deb}"; \
     apt-get update; \
     apt-get upgrade -y; \
-    apt-get purge -y \
+    pkgs="$(for p in \
         docker-ce docker-ce-cli docker-compose-plugin docker-buildx-plugin \
         containerd.io \
         firmware-amd-graphics firmware-linux-nonfree firmware-misc-nonfree \
@@ -46,7 +46,10 @@ RUN set -eux; \
         libnvidia-egl-gbm1 libnvidia-egl-wayland1 \
         cups-client cups-common cups-daemon cups-filters \
         cups-filters-core-drivers cups-ipp-utils \
-        breeze-cursor-theme locales-all; \
+        breeze-cursor-theme locales-all; do \
+        if dpkg -s "$p" >/dev/null 2>&1; then echo "$p"; fi; \
+    done)"; \
+    if [ -n "$pkgs" ]; then apt-get purge -y $pkgs; fi; \
     localedef -i en_US -f UTF-8 en_US.UTF-8; \
     apt-get install -y --no-install-recommends ca-certificates curl; \
     curl -fsSL -o /tmp/rawmakase.deb "$url"; \
