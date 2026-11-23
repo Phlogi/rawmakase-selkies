@@ -121,6 +121,8 @@ Build arguments:
 The Selkies base image is pinned by digest in the `Dockerfile` as the
 multi-arch `debiantrixie` index, so `docker buildx` resolves the right platform
 and Dependabot can open a pull request when LinuxServer publishes a new build.
+Every build upgrades the base image's packages, and a weekly scheduled run
+republishes, so Debian security fixes land without waiting for a release.
 
 The package, rather than a copied binary, is installed deliberately: dpkg owns
 `/usr/bin/rawmakase`, so the app never tries to self-update inside the

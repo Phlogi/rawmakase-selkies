@@ -26,11 +26,14 @@ ARG DEBIAN_FRONTEND=noninteractive
 ENV TITLE="RAWmakase" \
     NO_GAMEPAD=true
 
+# Upgrade the base image's packages first, so Debian security fixes published
+# after LinuxServer built it are included even when the base digest is unchanged.
 RUN set -eux; \
     arch="$(dpkg --print-architecture)"; \
     case "$arch" in amd64|arm64) ;; *) echo "No RAWmakase package for $arch" >&2; exit 1 ;; esac; \
     url="${RAWMAKASE_DEB:-https://github.com/pch/rawmakase/releases/download/v${RAWMAKASE_VERSION}/rawmakase_${RAWMAKASE_VERSION}_${arch}.deb}"; \
     apt-get update; \
+    apt-get upgrade -y; \
     apt-get install -y --no-install-recommends ca-certificates curl; \
     curl -fsSL -o /tmp/rawmakase.deb "$url"; \
     apt-get install -y --no-install-recommends \
