@@ -18,7 +18,7 @@ FROM ghcr.io/linuxserver/baseimage-selkies:debiantrixie@sha256:793fc3628ad6e089a
 # written down: the update workflow moves it, the publish workflow tags the
 # image with it, and nothing else repeats it. RAWMAKASE_DEB overrides the whole
 # URL, for a local mirror, a nightly or a hand-built package.
-ARG RAWMAKASE_VERSION=0.7.2
+ARG RAWMAKASE_VERSION=0.8.0
 ARG RAWMAKASE_DEB=
 
 ARG DEBIAN_FRONTEND=noninteractive
